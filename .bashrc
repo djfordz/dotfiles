@@ -11,7 +11,7 @@ fi
 
 ulimit -S -c 0      # Don't want coredumps.
 set -o notify
-set -o noclobber
+#set -o noclobber
 set -o ignoreeof
 
 
@@ -25,6 +25,7 @@ shopt -s no_empty_cmd_completion
 shopt -s cmdhist
 shopt -s histappend histreedit histverify
 shopt -s extglob       # Necessary for programmable completion.
+shopt -s autocd
 
 # Disable options:
 shopt -u mailwarn
@@ -64,13 +65,6 @@ NC="\e[m"               # Color Reset
 
 
 ALERT=${BWhite}${On_Red} # Bold White on red background
-
-
-function _exit()              # Function to run upon exit of shell.
-{
-    echo -e "${BRed}Hasta la vista, baby${NC}"
-}
-trap _exit EXIT
 
 # Test connection type:
 if [ -n "${SSH_CONNECTION}" ]; then
@@ -171,6 +165,8 @@ export HISTIGNORE="&:bg:fg:ll:h"
 export HISTTIMEFORMAT="$(echo -e ${BCyan})[%d/%m %H:%M:%S]$(echo -e ${NC}) "
 export HISTCONTROL=ignoredups
 export HOSTFILE=$HOME/.hosts    # Put a list of remote hosts in ~/.hosts
+export TERM=xterm-color
+export CLICOLOR=1
 
 # Aliases
 alias setctags='ctags -f php.tags --languages=PHP -R'
@@ -187,7 +183,7 @@ alias cim='vim'
 alias back='cd $OLDPWD'
 alias root='sudo su'
 alias runlevel='sudo /sbin/init'
-alias grep='grep --color=auto'
+alias grep='grep --color=always'
 alias dfh='df -h'
 alias gvim='gvim -geom 84x26'
 alias start='dbus-launch startx'
@@ -214,7 +210,15 @@ alias lr='ll -R'           #  Recursive ls.
 alias la='ll -A'           #  Show hidden files.
 alias tree='tree -Csuh'    #  Nice alternative to 'recursive ls' ...
 alias more='less'
-
+alias ports='netstat -punta'
+alias lports='netstat -puntl'
+alias xs='cd'
+alias vf='cd'
+alias moer='more'
+alias moew='more'
+alias kk='ll'
+alias n98-magerun='/srv/http/web_projects/magerun/bin/n98-magerun'
+alias n98-magerun2='/srv/http/web_projects/magerun2/bin/n98-magerun2'
 
 export PAGER=less
 export LESSCHARSET='latin1'
@@ -229,26 +233,14 @@ export LESS_TERMCAP_se=$'\E[0m'
 export LESS_TERMCAP_so=$'\E[01;44;33m'
 export LESS_TERMCAP_ue=$'\E[0m'
 export LESS_TERMCAP_us=$'\E[01;32m'
-alias xs='cd'
-alias vf='cd'
-alias moer='more'
-alias moew='more'
-alias kk='ll'
+
+# Use colors for less, man, etc.
+[[ -f ~/.LESS_TERMCAP ]] && . ~/.LESS_TERMCAP
 
 # Bash completion
-if [ -f /etc/bash_completion ]; then
-	. /etc/bash_completion
-fi
+[ -r /usr/share/bash-completion/bash_completion ] && . /usr/share/bash-completion/bash_completion
 
 # .. and functions
-function man()
-{
-    for i ; do
-        xtitle The $(basename $1|tr -d .[:digit:]) manual
-        command man -a "$i"
-    done
-}
-
 function te()  # wrapper around xemacs/gnuserv
 {
     if [ "$(gnuclient -batch -eval t 2>&-)" == "t" ]; then
@@ -400,7 +392,7 @@ function mydf()         # Pretty-print of 'df' output.
 
 function my_ip() # Get IP address on ethernet.
 {
-    MY_IP=$(/sbin/ifconfig wlp2s0 | awk '/inet/ { print $2 } ' |
+    MY_IP=$(/sbin/ifconfig wlp3s0 | awk '/inet/ { print $2 } ' |
       sed -e s/addr://)
     echo ${MY_IP:-"Not connected"}
 }
@@ -465,63 +457,53 @@ _killall()
 
 complete -F _killall killall killps
 
+function salt()
+{
+  < /dev/urandom tr -dc A-Za-z0-9 | head -c${1:-64};echo;
+}
+
+function hash()
+{
+    echo "$1" | md5sum
+}
+
 # Locale and editor
-export EDITOR=vim
+export EDITOR="vim"
 export BROWSER="chromium"
 
 # Paths
 PATH=$PATH:${HOME}/bin:/usr/lib/wine/bin:/sbin:/usr/sbin
 export PATH=$PATH:/usr/local/bin
+export PATH=$PATH:/opt/android-studio/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/wine/lib:/usr/local/lib
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
 export PATH=$HOME/.gem/ruby/2.2.0/bin:${PATH}
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
+export PATH="$HOME/.gem/ruby/2.4.0/bin:$PATH"
 export PATH="~/.composer/vendor/bin:$PATH"
-export PATH="$HOME/.phpenv/bin:$PATH"
+export GEM_PATH="$HOME/.gem/ruby/2.4.0"
+export GEM_PATH="/usr/lib/ruby/gems/2.4.0/gems:$GEM_PATH"
+export RUBYGEMS_GEMDEPS="/usr/lib/ruby/gems/2.4.0/gems/"
+
+eval "$(rbenv init -)"
+
+export NVM_DIR="/home/djfordz/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+alias p='cd ~/projects'
+alias w='cd ~/web_projects'
+alias f='cd ~/freelancer_projects'
+alias c='cd ~/cwork'
+alias a='cd ~/android'
+export ANDROID_SDK=/opt/android-sdk/
+alias make50="make CC=clang CFLAGS='-ggdb3 -O0 -std=c99' -Wall -Werror LDLIBS='-lcs50 -lm'"
+export PATH="$HOME/.rbenv/bin:$PATH"
 eval "$(phpenv init -)"
-# The next line updates PATH for the Google Cloud SDK.
-source '/home/djfordz/google-cloud-sdk/path.bash.inc'
-# The next line enables shell command completion for gcloud.
-source '/home/djfordz/google-cloud-sdk/completion.bash.inc'
-
-export CLOUDSDK_PYTHON='python2'
-alias tor-chroot='chroot --userspec=tor:tor /opt/torchroot /usr/bin/tor'
-alias tor-chroot='chroot --userspec=tor:tor /opt/torchroot /usr/bin/tor'
-
-assignProxy() {
-    PROXY_ENV="http_proxy ftp_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY FTP_PROXY ALL_PROXY"
-    for envar in $PROXY_ENV
-    do
-    export $envar=$1
-    done
-    for envar in "no_proxy NO_PROXY"
-    do
-    export $envar=$2
-    done
-
-}
-
-clrProxy() {
-    assignProxy "" # This is what 'unset' does.
-
-}
-
-myProxy() {
-    #user=djfordz
-    #read -p "Password: " -s pass &&  echo -e " "
-    proxy_value="http://127.0.0.1:8118"
-    no_proxy_value="localhost,127.0.0.1,LocalAddress,LocalDomain.com"
-    assignProxy $proxy_value $no_proxy_value
-}
 
 function proxy_on() {
     export no_proxy="localhost,127.0.0.1,localaddress,.localdomain.com"
 
-    if (( $# > 0  )); then
+    if (( $# > 0 )); then
         valid=$(echo $@ | sed -n 's/\([0-9]\{1,3\}.\)\{4\}:\([0-9]\+\)/&/p')
-        if [[ $valid != $@  ]]; then
+        if [[ $valid != $@ ]]; then
             >&2 echo "Invalid address"
             return 1
         fi
@@ -535,7 +517,7 @@ function proxy_on() {
     fi
 
     echo -n "username: "; read username
-    if [[ $username != ""  ]]; then
+    if [[ $username != "" ]]; then
         echo -n "password: "
         read -es password
         local pre="$username:$password@"
@@ -553,8 +535,7 @@ function proxy_on() {
     export RSYNC_PROXY=$http_proxy
 }
 
-
-function proxy_off() {
+function proxy_off(){
     unset http_proxy
     unset https_proxy
     unset ftp_proxy
@@ -562,11 +543,10 @@ function proxy_off() {
     echo -e "Proxy environment variable removed."
 }
 
+export SSHPASS=cessna121
+export GOROOT=/usr/lib/go
+export GOPATH=$HOME/go/bin
+export PATH=$PATH:$GOPATH
 
-export PATH=/home/djfordz/google-cloud-sdk/bin:/home/djfordz/.phpenv/shims:/home/djfordz/.phpenv/bin:~/.composer/vendor/bin:/home/djfordz/.pyenv/shims:/home/djfordz/.pyenv/bin:/home/djfordz/.gem/ruby/2.2.0/bin:/home/djfordz/google-cloud-sdk/bin:/home/djfordz/.phpenv/shims:/home/djfordz/.phpenv/bin:~/.composer/vendor/bin:/home/djfordz/.pyenv/shims:/home/djfordz/.pyenv/bin:/home/djfordz/.gem/ruby/2.2.0/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/opt/android-ndk:/opt/android-sdk/build-tools/22.0.1/:/opt/android-sdk/platform-tools:/opt/android-sdk/tools:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/djfordz/bin:/usr/lib/wine/bin:/sbin:/usr/sbin:/usr/local/bin:/home/djfordz/bin:/usr/lib/wine/bin:/sbin:/usr/sbin:/usr/local/bin:/srv/http/magento2/bin/
-export PATH=/home/djfordz/google-cloud-sdk/bin:/home/djfordz/.phpenv/shims:/home/djfordz/.phpenv/bin:/home/djfordz/.composer/vendor/bin:/home/djfordz/.pyenv/shims:/home/djfordz/.pyenv/bin:/home/djfordz/.gem/ruby/2.2.0/bin:/home/djfordz/google-cloud-sdk/bin:/home/djfordz/.phpenv/shims:/home/djfordz/.phpenv/bin:/home/djfordz/.composer/vendor/bin:/home/djfordz/.pyenv/shims:/home/djfordz/.pyenv/bin:/home/djfordz/.gem/ruby/2.2.0/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/opt/android-ndk:/opt/android-sdk/build-tools/22.0.1/:/opt/android-sdk/platform-tools:/opt/android-sdk/tools:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/djfordz/bin:/usr/lib/wine/bin:/sbin:/usr/sbin:/usr/local/bin:/home/djfordz/bin:/usr/lib/wine/bin:/sbin:/usr/sbin:/usr/local/bin:/srv/http/magento2/bin/:/srv/http/bin/
-export PATH=/home/djfordz/google-cloud-sdk/bin:/home/djfordz/.phpenv/shims:/home/djfordz/.phpenv/bin:/home/djfordz/.composer/vendor/bin:/home/djfordz/.pyenv/shims:/home/djfordz/.pyenv/bin:/home/djfordz/.gem/ruby/2.2.0/bin:/home/djfordz/google-cloud-sdk/bin:/home/djfordz/.phpenv/shims:/home/djfordz/.phpenv/bin:/home/djfordz/.composer/vendor/bin:/home/djfordz/.pyenv/shims:/home/djfordz/.pyenv/bin:/home/djfordz/.gem/ruby/2.2.0/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/opt/android-ndk:/opt/android-sdk/build-tools/22.0.1/:/opt/android-sdk/platform-tools:/opt/android-sdk/tools:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/djfordz/bin:/usr/lib/wine/bin:/sbin:/usr/sbin:/usr/local/bin:/home/djfordz/bin:/usr/lib/wine/bin:/sbin:/usr/sbin:/usr/local/bin:/srv/http/magento2/bin/:/srv/http/bin/:/opt/android-studio/bin/studio.sh
-export PATH=/home/djfordz/google-cloud-sdk/bin:/home/djfordz/.phpenv/shims:/home/djfordz/.phpenv/bin:/home/djfordz/.composer/vendor/bin:/home/djfordz/.pyenv/shims:/home/djfordz/.pyenv/bin:/home/djfordz/.gem/ruby/2.2.0/bin:/home/djfordz/google-cloud-sdk/bin:/home/djfordz/.phpenv/shims:/home/djfordz/.phpenv/bin:/home/djfordz/.composer/vendor/bin:/home/djfordz/.pyenv/shims:/home/djfordz/.pyenv/bin:/home/djfordz/.gem/ruby/2.2.0/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/opt/android-ndk:/opt/android-sdk/build-tools/22.0.1/:/opt/android-sdk/platform-tools:/opt/android-sdk/tools:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/djfordz/bin:/usr/lib/wine/bin:/sbin:/usr/sbin:/usr/local/bin:/home/djfordz/bin:/usr/lib/wine/bin:/sbin:/usr/sbin:/usr/local/bin:/srv/http/magento2/bin/:/srv/http/bin/:/opt/android-studio/bin/studio.sh:/opt/android-studio/bin/
-
-export NVM_DIR="/home/djfordz/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+source /usr/share/bash-completion/bash_completion
+export PATH=$PATH:/home/dford/.config/composer/vendor/bin

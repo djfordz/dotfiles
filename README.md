@@ -1,1 +1,5 @@
-##Dotfiles
+# Dotfiles
+.bashrc
+.conkyrc
+.vim/ 
+.vimrc
