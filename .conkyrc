@@ -1,6 +1,6 @@
 -- vim: ts=4 sw=4 noet ai cindent syntax=lua
 conky.config = {
-    alignment = 'top_left',
+    alignment = 'top_right',
     background = 'yes',
     border_width = 6,
     cpu_avg_samples = 4,
@@ -14,7 +14,7 @@ conky.config = {
     draw_shades = false,
     use_xft = true,
     font = 'Anonymous Pro:size=9',
-    gap_x = -250,
+    gap_x = 10,
     gap_y = 40,
     minimum_height = 5,
 	minimum_width = 5,
@@ -39,46 +39,58 @@ conky.config = {
 }
 
 conky.text = [[
-	${color CC9900}SYSTEM ${hr 2}$color
-	$nodename $sysname $kernel 
-	${voffset 2}${goto 58}Uptime: ${uptime}
-	${voffset 3}${goto 40}${utime}${font}
-	${color CC9900}CPU ${hr 2}$color
-	${voffset 1}${goto 32}CPU1: ${cpu cpu1}%${alignr 5}CPU2: ${cpu cpu2}%
-	${color 597DB2}${cpubar}$color
-	${voffset 4}${goto 32}Frequency: ${alignr 5}${freq_g (1)} GHz
-	${voffset 4}${color CC9900}MEMORY ${hr 2}$color
-	${voffset 2}${goto 22}Memory: ${mem}
-	${membar}
-	${voffset 2}${goto 22}Swap: $swapperc%
-	${swapbar}
-	${voffset 2}${goto 22}Disk: ${diskio}
-	${diskiograph F57900 FCAF3E}
-	${voffset 0}${color CC9900}HDD ${hr 2}$color
-	${goto 12}${voffset 2}${fs_used /}/${fs_size /} ${alignr}${fs_bar 8,100 /}
-	${voffset 4}${color CC9900}PROCESSES${hr 2}$color
-	${voffset 2}${goto 22}$processes ($running_processes running)
-	${voffset 4}${goto 12}Highest: ${alignr 24}CPU${alignr 5}RAM
-	${voffset 1}${top name 1} ${goto 124}${top cpu 1}${alignr 5}${top mem 1}
-	${voffset 1}${top name 2} ${goto 124}${top cpu 2}${alignr 5}${top mem 2}
-	${voffset 1}${top name 3} ${goto 124}${top cpu 3}${alignr 5}${top mem 3}
-	${voffset 1}${top name 4} ${goto 124}${top cpu 4}${alignr 5}${top mem 4}
-	${voffset 1}${top name 5} ${goto 124}${top cpu 5}${alignr 5}${top mem 5}
-	${voffset 4}${color CC9900}NETWORK${hr 2}$color 
+	${color CC9900}${goto 22}SYSTEM ${hr 2}$color
+	${alignc}${nodename} ${sysname} ${kernel} 
+	${voffset 2}${alignc}Uptime: ${uptime}
+	${voffset 3}${alignc}UTC: ${utime %H}:${utime %M}:${utime %S}
+	${color CC9900}${goto 22}CPU ${hr 2}${color}
+	${goto 32}CPU1: ${cpu cpu0}% ${color 597DB2}${cpubar cpu0}${color}
+	${goto 32}CPU2: ${cpu cpu1}% ${color 597DB2}${cpubar cpu1}${color}
+	${goto 32}CPU3: ${cpu cpu2}% ${color 597DB2}${cpubar cpu2}${color}
+	${goto 32}CPU4: ${cpu cpu3}% ${color 597DB2}${cpubar cpu3}${color}
+	${voffset 4}${alignc}Frequency: ${freq_g (1)} GHz
+	${voffset 4}${goto 22}${color CC9900}MEMORY ${hr 2}${color}
+	${voffset 2}${goto 32}Memory: ${mem}
+	${goto 32}${membar}
+	${voffset 2}${goto 32}Swap: $swapperc%
+	${goto 32}${swapbar}
+	${voffset 2}${goto 32}Disk: ${diskio}
+	${goto 32}${diskiograph F57900 FCAF3E}
+	${voffset 0}${color CC9900}${goto 22}HDD ${hr 2}${color}
+	${voffset 2}${goto 32}${fs_used /}/${fs_size /}${alignr}${fs_bar 8,100 /}
+	${voffset 2}${goto 32}${fs_used /home}/${fs_size /home}${alignr}${fs_bar 8,100 /home}
+	${voffset 4}${goto 22}${color CC9900}PROCESSES${hr 2}${color}
+	${voffset 2}${alignc}${processes} (${running_processes} running)
+	${voffset 6}${goto 25}HIGHEST ${alignr 41}CPU${alignr 8}RAM
+	${voffset -5}${hr}
+	${voffset 1}${goto 25}${top name 1} ${goto 124}${top cpu 1}${alignr 5}${top mem 1}
+	${voffset 1}${goto 25}${top name 2} ${goto 124}${top cpu 2}${alignr 5}${top mem 2}
+	${voffset 1}${goto 25}${top name 3} ${goto 124}${top cpu 3}${alignr 5}${top mem 3}
+	${voffset 1}${goto 25}${top name 4} ${goto 124}${top cpu 4}${alignr 5}${top mem 4}
+	${voffset 1}${goto 25}${top name 5} ${goto 124}${top cpu 5}${alignr 5}${top mem 5}
+	${voffset 4}${color CC9900}${goto 22}NETWORK${hr 2}$color 
+	${voffset -20}
 	${if_existing /sys/class/net/wlp3s0/operstate up}
-	${voffset 4}Local IP: ${alignr 13}${addr wlp3s0}
-	${voffset 4}Signal: ${wireless_link_qual wlp3s0}%
-	${wireless_link_bar wlp3s0}
-	${voffset 4}SSID: ${wireless_essid wlp3s0}
-	${voffset 1}Up: ${upspeed wlp3s0}
-	${upspeedgraph wlp3s0 F57900 FCAF3E}
-	${voffset 1}Down: ${downspeed wlp3s0}
-	${downspeedgraph wlp3s0 F57900 FCAF3E}
-	${goto 32}${voffset -4}Total Up${alignr 13}Total Dn
-	${goto 32}${totalup wlp3s0}${alignr 13}${totaldown wlp3s0}
+	${goto 32}SSID: ${wireless_essid wlp3s0}
+	${goto 32}Signal:${wireless_link_qual wlp3s0}% ${wireless_link_bar wlp3s0} 
+	${goto 32}Local IP: ${addr wlp3s0}
+	${voffset 5}${goto 32}Up:${upspeed wlp3s0}
+	${goto 32}${upspeedgraph wlp3s0 F57900 FCAF3E}
+	${goto 32}Down:${downspeed wlp3s0}
+	${goto 32}${downspeedgraph wlp3s0 F57900 FCAF3E}
+	${goto 32}Total Up${alignr 10}Total Dn
+	${goto 40}${totalup wlp3s0}${alignr 10}${totaldown wlp3s0}
 	${endif}
-	${hr 1}
-	Battery: ${alignr 5}${battery}
-	${battery_bar}
-	${hr 2}
+	${if_existing /sys/class/net/enp2s0/operstate up}
+	${goto 32}Local IP: ${alignr 13}${addr wlp3s0}
+	${goto 32}Up:${upspeed wlp3s0}
+	${goto 32}${upspeedgraph wlp3s0 F57900 FCAF3E}
+	${goto 32}Down:${downspeed wlp3s0}
+	${goto 32}${downspeedgraph wlp3s0 F57900 FCAF3E}
+	${goto 32}Total Up${alignr 10}Total Dn
+	${goto 40}${totalup wlp3s0}${alignr 10}${totaldown wlp3s0}
+	${endif}
+	${voffset -25}${hr 1}
+	${voffset 5}${goto 32}Battery: ${alignr 5}${battery}
+	${goto 32}${battery_bar}
 ]]
